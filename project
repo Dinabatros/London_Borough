@@ -1,0 +1,230 @@
+# London-housing-projectٍ
+
+# Let's import the pandas, numpy libraries as pd, and np respectively. 
+import pandas as pd 
+import numpy as np 
+
+# Load the pyplot collection of functions from matplotlib, as plt 
+import matplotlib.pyplot as plt
+
+# First, make a variable called url_LondonHousePrices, and assign it the following link, enclosed in quotation-marks as a string:
+# https://data.london.gov.uk/download/uk-house-price-index/70ac0766-8902-4eb5-aab5-01951aaed773/UK%20House%20price%20index.xls
+
+url_LondonHousePrices= "https://data.london.gov.uk/download/uk-house-price-index/70ac0766-8902-4eb5-aab5-01951aaed773/UK%20House%20price%20index.xls"
+
+# The dataset we're interested in contains the Average prices of the houses, and is actually on a particular sheet of the Excel file. 
+# As a result, we need to specify the sheet name in the read_excel() method.
+# Put this data into a variable called properties.  
+properties = pd.read_excel(url_LondonHousePrices, sheet_name='Average price', index_col= None)
+
+# First off, let's use .shape feature of pandas DataFrames to look at the number of rows and columns. 
+properties.shape
+# Using the .head() method, let's check out the state of our dataset.  
+properties.head()
+
+# Do this here
+properties_T = properties.transpose()
+# Let's check the head of our new Transposed DataFrame. 
+properties_T.head()
+
+# To confirm what our row indices are, let's call the .index variable on our properties_T DataFrame. 
+properties_T.index
+
+# Our suspicion was correct. 
+# Call the .reset_index() method on properties_T to reset the indices, and the reassign the result to properties_T: 
+properties_T = properties_T.reset_index()
+
+# Now let's check out our DataFrames indices: 
+properties_T.index
+
+# Call the head() function again on properties_T to check out the new row indices: 
+properties_T.head()
+
+# To confirm that our DataFrame's columns are mainly just integers, call the .columns feature on our DataFrame:
+properties_T.columns
+
+# Call the iloc[] method with double square brackets on the properties_T DataFrame, to see the row at index 0. 
+properties_T.iloc[0]
+
+# Try this now. 
+properties_T.columns = properties_T.iloc[0]
+
+# Check out our DataFrame again: 
+properties_T.head()
+
+# Have a go at this now. 
+properties_T = properties_T.drop(0)
+
+# Now check out our DataFrame again to see how it looks. 
+properties_T.head()
+
+# Try this here. 
+properties_T = properties_T.rename(columns = {'Unnamed: 0':'London_Borough', pd.NaT: 'ID'})
+
+# Let's check out the DataFrame again to admire our good work. 
+properties_T.head()
+
+# Try this here. 
+properties_T.columns
+
+# Try this here: 
+clean_properties = pd.melt(properties_T, id_vars= ['London_Borough', 'ID'])
+
+clean_properties.head()
+
+# Re-name the column names
+clean_properties = clean_properties.rename(columns = {0: 'Month', 'value': 'Average_price'})
+
+# Check out the DataFrame: 
+clean_properties.head()
+
+# Let's use the .dtypes attribute to check the data types of our clean_properties DataFrame:
+clean_properties.dtypes
+
+# Try this here
+clean_properties['Average_price'] = pd.to_numeric(clean_properties['Average_price'])
+
+# Check out the new data types:
+clean_properties.dtypes
+
+# To see if there are any missing values, we should call the count() method on our DataFrame:
+clean_properties.count()
+
+# Do this here. 
+clean_properties['London_Borough'].unique()
+
+# Subset clean_properties on the condition: df['London_Borough'] == 'Unnamed: 34' to see what information these rows contain. 
+clean_properties[clean_properties['London_Borough'] == 'Unnamed: 34'].head()
+
+# Let's do the same for 'Unnamed: 37':
+clean_properties[clean_properties['London_Borough'] == 'Unnamed: 37'].head()
+
+# Let's look at how many rows have NAs as their value for ID. 
+# To this end, subset clean_properties on the condition: clean_properties['ID'].isna().
+# Notice that this line doesn't actually reassign a new value to clean_properties. 
+clean_properties[clean_properties['ID'].isna()]
+
+# Try your hand at method (1) here: 
+NaNFreeDF1 = clean_properties[clean_properties['Average_price'].notna()]
+NaNFreeDF1.head(48)
+
+# If we do a count on our new DataFrame, we'll see how many rows we have that have complete information: 
+NaNFreeDF1.count()
+
+# filtering the data with NaN values
+NaNFreeDF2 = clean_properties.dropna()
+NaNFreeDF2.head(48)
+
+# Let's do a count on this DataFrame object: 
+NaNFreeDF2.count()
+
+NaNFreeDF2['London_Borough'].unique()
+
+# Using the .shape attribute, compare the dimenions of clean_properties, NaNFreeDF1, and NaNFreeDF2: 
+print(clean_properties.shape)
+print(NaNFreeDF1.shape)
+print(NaNFreeDF2.shape)
+
+# A list of non-boroughs. 
+nonBoroughs = ['Inner London', 'Outer London', 
+               'NORTH EAST', 'NORTH WEST', 'YORKS & THE HUMBER', 
+               'EAST MIDLANDS', 'WEST MIDLANDS',
+              'EAST OF ENGLAND', 'LONDON', 'SOUTH EAST', 
+              'SOUTH WEST', 'England']
+
+# Do this here. 
+NaNFreeDF2[NaNFreeDF2.London_Borough.isin(nonBoroughs)]
+
+NaNFreeDF2[~ NaNFreeDF2.London_Borough.isin(nonBoroughs)]
+
+NaNFreeDF2= NaNFreeDF2[~NaNFreeDF2.London_Borough.isin(nonBoroughs)]
+
+NaNFreeDF2.head()
+
+# Do that here. 
+df = NaNFreeDF2
+
+df.head()
+
+df.dtypes
+
+# First of all, make a variable called camden_prices, and assign it the result of filtering df on the following condition:
+# df['London_Borough'] == 'Camden'
+camden_prices = df[df['London_Borough'] == 'Camden']
+
+# Make a variable called ax. Assign it the result of calling the plot() method, and plugging in the following values as parameters:
+# kind ='line', x = 'Month', y='Average_price'
+ax = camden_prices.plot(kind ='line', x = 'Month', y='Average_price')
+
+# Finally, call the set_ylabel() method on ax, and set that label to the string: 'Price'. 
+ax.set_ylabel('Price')
+
+# Try this yourself. 
+df['Year'] = df['Month'].apply(lambda t: t.year)
+
+# Call the tail() method on df
+df.tail()
+
+# Using the function 'groupby' will help you to calculate the mean for each year and for each Borough. 
+## As you can see, the variables Borough and Year are now indices
+dfg = df.groupby(by=['London_Borough', 'Year']).mean()
+dfg.sample(10)
+
+# Let's reset the index for our new DataFrame dfg, and call the head() method on it. 
+dfg = dfg.reset_index()
+dfg.head()
+
+# Here's where you should write your function:
+def create_price_ratio(d):
+    y1998 = float(d['Average_price'][d['Year']==1998])
+    y2018 = float(d['Average_price'][d['Year']==2018])
+    ratio = [y1998/y2018]
+    return ratio
+
+#  Test out the function by calling it with the following argument:
+# dfg[dfg['London_Borough']=='Barking & Dagenham']
+create_price_ratio(dfg[dfg['London_Borough']=='Barking & Dagenham'])
+
+# We want to do this for all of the London Boroughs. 
+# First, let's make an empty dictionary, called final, where we'll store our ratios for each unique London_Borough.
+final = {}
+
+# Now let's declare a for loop that will iterate through each of the unique elements of the 'London_Borough' column of our DataFrame dfg.
+# Call the iterator variable 'b'. 
+for b in dfg['London_Borough'].unique():
+    # Let's make our parameter to our create_price_ratio function: i.e., we subset dfg on 'London_Borough' == b. 
+    borough = dfg[dfg['London_Borough'] == b]
+    # Make a new entry in the final dictionary whose value's the result of calling create_price_ratio with the argument: borough
+    final[b] = create_price_ratio(borough)
+# We use the function and incorporate that into a new key of the dictionary 
+print(final) 
+
+# Make a variable called df_ratios, and assign it the result of calling the DataFrame method on the dictionary final. 
+df_ratios = pd.DataFrame(final)
+
+# Call the head() method on this variable to check it out. 
+df_ratios.head()
+
+# All we need to do now is transpose it, and reset the index! 
+df_ratios_T = (df_ratios).T
+df_ratios = df_ratios_T.reset_index()
+df_ratios.head()
+
+# Let's just rename the 'index' column as 'London_Borough', and the '0' column to '2018'.
+df_ratios.rename(columns={'index':'Borough', 0:'2018'}, inplace=True)
+df_ratios.head()
+
+# Let's sort in descending order and select the top 15 boroughs.
+# Make a variable called top15, and assign it the result of calling sort_values() on df_ratios. 
+top15 = df_ratios.sort_values(by='2018',ascending=False).head(15)
+print(top15)
+
+
+# Let's plot the boroughs that have seen the greatest changes in price.
+# Make a variable called ax. Assign it the result of filtering top15 on 'Borough' and '2018', then calling plot(), with
+# the parameter kind = 'bar'. 
+ax = top15[['Borough','2018']].plot(kind='bar')
+
+ax.set_xticklabels(top15.Borough)
+
+
